@@ -281,10 +281,10 @@ public abstract class BlockManager {
 					.replace("%number%", pNumber)
 					.replace("%block%", pBlock)
 					.replace("%world%", data.getLocation().getWorld())
-					.replace("%time%", elapsed >= 0 ? formatElapsed(elapsed) : "%time%"
+					.replace("%time%", elapsed >= 0 ? formatElapsed(elapsed) : "%time%")
 					.replace("%light_level%", Integer.toString(data.getLightLevel()))
 					.replace("%height_level%", Integer.toString((int) data.getLocation().getY()))
-				), data.getBlock());
+				, data.getBlock());
 		
 		String ret = plugin.getMessageUtils().convertPlayerPlaceholders(repl.apply(message), data.getPlayer());
 		

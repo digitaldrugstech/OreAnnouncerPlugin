@@ -306,7 +306,7 @@ public class CommandTop extends OASubCommand {
 		sendMessage(sender, player, Messages.CMD_TOP_FOOTER
 				.replace("%total%", Integer.toString(numberPlayers))
 				.replace("%page%", Integer.toString(selectedPage))
-				.replace("%maxpages", Integer.toString(maxPages)));
+				.replace("%maxpages%", Integer.toString(maxPages)));
 	}
 	
 	@Override
