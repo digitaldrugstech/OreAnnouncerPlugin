@@ -116,7 +116,11 @@ public abstract class BlockManager {
 	public abstract boolean markBlock(ADPLocation blockLocation, OABlockImpl block, MarkType markType);
 	
 	public abstract void unmarkBlock(ADPLocation blockLocation, MarkType markType);
-	
+
+	public void cleanup() {
+		// Override in subclasses to free resources
+	}
+
 	public void handleAlerts(BlockData data) {
 		String userMessage = CommonUtils.getOr(data.getBlock().getMessageUser(), Messages.ALERTS_USER);
 		String adminMessage = CommonUtils.getOr(data.getBlock().getMessageAdmin(), Messages.ALERTS_ADMIN);
@@ -312,7 +316,7 @@ public abstract class BlockManager {
 		if (ConfigMain.EXECUTE_COMMANDS_ENABLE && !commands.isEmpty() && data.getPlayer() != null) {
 			plugin.getScheduler().getSyncExecutor().execute(() -> {
 				User user = plugin.getPlayer(data.getPlayer().getPlayerUUID());
-				if (!user.hasPermission(OreAnnouncerPermission.ADMIN_BYPASS_EXECUTE_COMMANDS)) {
+				if (user != null && !user.hasPermission(OreAnnouncerPermission.ADMIN_BYPASS_EXECUTE_COMMANDS)) {
 					dispatchCommands(commands, data, user);
 				}
 			});

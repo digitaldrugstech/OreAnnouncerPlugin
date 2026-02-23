@@ -7,6 +7,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.util.function.Consumer;
+import java.util.logging.Level;
 
 /**
  * Utility class for detecting and interacting with Folia server runtime.
@@ -61,7 +62,7 @@ public final class FoliaUtil {
 			ENTITY_SCHEDULER_RUN.invoke(entityScheduler, plugin,
 					(Consumer<Object>) t -> task.run(), (Runnable) null);
 		} catch (Throwable e) {
-			throw new RuntimeException("Failed to schedule task on entity", e);
+			plugin.getLogger().log(Level.SEVERE, "Failed to schedule task on entity", e);
 		}
 	}
 }

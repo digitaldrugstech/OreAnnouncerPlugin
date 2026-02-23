@@ -33,20 +33,22 @@ public class ADPFoliaScheduler extends ADPScheduler {
 			MethodHandles.Lookup lookup = MethodHandles.publicLookup();
 
 			// Bukkit.getGlobalRegionScheduler() -> GlobalRegionScheduler
-			MethodHandle getScheduler = lookup.unreflect(
-					Bukkit.class.getMethod("getGlobalRegionScheduler"));
+			java.lang.reflect.Method getSchedulerMethod = Bukkit.class.getMethod("getGlobalRegionScheduler");
+			MethodHandle getScheduler = lookup.unreflect(getSchedulerMethod);
 			Object globalScheduler = getScheduler.invoke();
 
-			// GlobalRegionScheduler.run(Plugin, Consumer<ScheduledTask>) -> void
+			// Resolve run() on the public interface (return type), not the impl class.
+			// Using getClass() would fail with IllegalAccessException on package-private impls.
+			Class<?> schedulerInterface = getSchedulerMethod.getReturnType();
 			MethodHandle runHandle = lookup.unreflect(
-					globalScheduler.getClass().getMethod("run", Plugin.class, Consumer.class));
+					schedulerInterface.getMethod("run", Plugin.class, Consumer.class));
 
 			this.foliaSync = runnable -> {
 				try {
 					runHandle.invoke(globalScheduler, bukkitPlugin,
 							(Consumer<Object>) task -> runnable.run());
 				} catch (Throwable e) {
-					throw new RuntimeException("Failed to execute task via Folia scheduler", e);
+					plugin.getLoggerManager().logError("Failed to execute task via Folia scheduler: " + e.getMessage());
 				}
 			};
 		} catch (Throwable e) {

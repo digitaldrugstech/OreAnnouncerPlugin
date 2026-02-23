@@ -136,7 +136,7 @@ public abstract class BlockListener {
 					final boolean fAlertAdmins = alertAdmins;
 					plugin.getScheduler().runAsync(() -> {
 						OAPlayerImpl player = plugin.getPlayerManager().getPlayer(user.getUUID());
-						if (!(ConfigMain.WHITELIST_ENABLE && ConfigMain.WHITELIST_BYPASS_ALERTS) || !player.isWhitelisted())
+						if (player == null || !(ConfigMain.WHITELIST_ENABLE && ConfigMain.WHITELIST_BYPASS_ALERTS) || !player.isWhitelisted())
 							plugin.getBlockManager().handleAlerts(new BlockData(player, block, numberOfBlocks)
 									.setAlertUsers(fAlertUsers)
 									.setAlertAdmins(fAlertAdmins)
@@ -155,7 +155,7 @@ public abstract class BlockListener {
 				&& (!ConfigMain.BLOCKS_HEIGHT_ENABLE || !ConfigMain.BLOCKS_HEIGHT_COUNTIFLOWER || block.getHeightLevel() <= 0 || blockLocation.getY() <= block.getHeightLevel())) {
 			plugin.getScheduler().runAsync(() -> {
 				OAPlayerImpl player = plugin.getPlayerManager().getPlayer(user.getUUID());
-				if (!(ConfigMain.WHITELIST_ENABLE && ConfigMain.WHITELIST_BYPASS_DESTROY) || !player.isWhitelisted())
+				if (player == null || !(ConfigMain.WHITELIST_ENABLE && ConfigMain.WHITELIST_BYPASS_DESTROY) || !player.isWhitelisted())
 					plugin.getBlockManager().handleBlockDestroy(new BlockData(player, block, 1)
 							.setLocation(blockLocation));
 			});
@@ -171,7 +171,7 @@ public abstract class BlockListener {
 				if (numberOfBlocks > 0) {
 					plugin.getScheduler().runAsync(() -> {
 						OAPlayerImpl player = plugin.getPlayerManager().getPlayer(user.getUUID());
-						if (!(ConfigMain.WHITELIST_ENABLE && ConfigMain.WHITELIST_BYPASS_FOUND) || !player.isWhitelisted())
+						if (player == null || !(ConfigMain.WHITELIST_ENABLE && ConfigMain.WHITELIST_BYPASS_FOUND) || !player.isWhitelisted())
 							plugin.getBlockManager().handleBlockFound(new BlockData(player, block, numberOfBlocks)
 									.setLocation(blockLocation)
 									.setLightLevel(lightLevel)

@@ -31,7 +31,7 @@ public class BukkitBlockListener extends BlockListener implements Listener {
 			int enchantmentLevel = event.getPlayer().getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.SILK_TOUCH);
 
 			int lightLevel = 0;
-			java.util.List<Block> targetBlocks = event.getPlayer().getLastTwoTargetBlocks(null, 5);
+			java.util.List<Block> targetBlocks = event.getPlayer().getLastTwoTargetBlocks(null, 10);
 			if (!targetBlocks.isEmpty()) {
 				lightLevel = targetBlocks.get(0).getLightLevel();
 			}

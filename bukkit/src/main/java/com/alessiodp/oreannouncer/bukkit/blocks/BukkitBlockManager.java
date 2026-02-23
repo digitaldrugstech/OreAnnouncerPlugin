@@ -15,7 +15,6 @@ import com.alessiodp.oreannouncer.common.blocks.objects.OABlockImpl;
 import com.alessiodp.oreannouncer.common.configuration.data.ConfigMain;
 import com.alessiodp.oreannouncer.common.utils.OreAnnouncerPermission;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -74,19 +73,12 @@ public class BukkitBlockManager extends BlockManager implements Listener {
 
 	@Override
 	public boolean markBlock(ADPLocation blockLocation, OABlockImpl block, MarkType markType) {
-		// Verify block type matches by querying the world
-		Block bukkitBlock = getBukkitBlock(blockLocation);
-		if (bukkitBlock == null) {
-			return false;
-		}
+		// No world access here — block type is already verified at the call site.
+		// countNearBlocks() only recurses into matching blocks from the origin event thread.
+		// Querying the world would cause cross-region thread violations on Folia
+		// when an ore vein straddles a region boundary.
 
-		String blockType = getBlockType(bukkitBlock);
-		if (!block.getMaterialName().equalsIgnoreCase(blockType)
-				&& !block.getVariants().contains(blockType)) {
-			return false;
-		}
-
-		// Single atomic mark operation — fixes TOCTOU race
+		// merge() is atomic per-key; prev[0] captures the pre-existing bits (0 if absent).
 		int bit = markBit(markType);
 		long key = packCoordinates(blockLocation);
 		int[] prev = {0};
@@ -157,19 +149,12 @@ public class BukkitBlockManager extends BlockManager implements Listener {
 		markedBlocks.remove(event.getWorld().getName());
 	}
 
-	public void clearAll() {
+	@Override
+	public void cleanup() {
 		markedBlocks.clear();
 	}
 
 	// --- Internals ---
-
-	private Block getBukkitBlock(ADPLocation loc) {
-		org.bukkit.World world = Bukkit.getWorld(loc.getWorld());
-		if (world == null) {
-			return null;
-		}
-		return new Location(world, loc.getX(), loc.getY(), loc.getZ()).getBlock();
-	}
 
 	private static int markBit(MarkType type) {
 		return 1 << type.ordinal();

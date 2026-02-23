@@ -39,12 +39,5 @@ mvn clean package
 ls output/target/OreAnnouncer-*.jar
 ```
 
-### Testing with Folia
-
-```bash
-mvn clean package
-docker compose -f docker-compose.folia-test.yml up
-```
-
 ## License
 [AGPL-3.0](https://github.com/AlessioDP/OreAnnouncer/blob/master/LICENSE) — same as upstream.
