@@ -27,23 +27,22 @@ public class BukkitBlockListener extends BlockListener implements Listener {
 		super(plugin);
 	}
 	
-	@SuppressWarnings({"deprecation", "ConstantConditions", "RedundantCast"})
+	@SuppressWarnings({"ConstantConditions", "RedundantCast"})
 	@EventHandler(priority=EventPriority.MONITOR)
 	public void onBlockBreak(BlockBreakEvent event) {
 		if (!event.isCancelled()) {
-			// Get enchantments
-			int enchantmentLevel;
-			try {
-				enchantmentLevel = event.getPlayer().getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.SILK_TOUCH);
-			} catch (NoSuchMethodError ex) {
-				// MC 1.8
-				enchantmentLevel = event.getPlayer().getInventory().getItemInHand().getEnchantmentLevel(Enchantment.SILK_TOUCH);
+			int enchantmentLevel = event.getPlayer().getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.SILK_TOUCH);
+
+			int lightLevel = 0;
+			java.util.List<Block> targetBlocks = event.getPlayer().getLastTwoTargetBlocks((Set<Material>) null, 1);
+			if (!targetBlocks.isEmpty()) {
+				lightLevel = targetBlocks.get(0).getLightLevel();
 			}
-			
+
 			super.onBlockBreak(
 					new BukkitUser(plugin, event.getPlayer()),
 					((BukkitBlockManager) plugin.getBlockManager()).getBlockType(event.getBlock()),
-					event.getPlayer().getLastTwoTargetBlocks((Set<Material>) null,1).get(0).getLightLevel(),
+					lightLevel,
 					enchantmentLevel > 0,
 					new ADPLocation(
 							event.getBlock().getLocation().getWorld().getName(),
