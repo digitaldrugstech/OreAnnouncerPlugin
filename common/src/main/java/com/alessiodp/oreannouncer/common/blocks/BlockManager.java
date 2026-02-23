@@ -308,7 +308,7 @@ public abstract class BlockManager {
 		);
 	}
 	
-	private void executeBlockCommands(List<String> commands, BlockData data) {
+	protected void executeBlockCommands(List<String> commands, BlockData data) {
 		if (ConfigMain.EXECUTE_COMMANDS_ENABLE && !commands.isEmpty() && data.getPlayer() != null) {
 			plugin.getScheduler().getSyncExecutor().execute(() -> {
 				User user = plugin.getPlayer(data.getPlayer().getPlayerUUID());

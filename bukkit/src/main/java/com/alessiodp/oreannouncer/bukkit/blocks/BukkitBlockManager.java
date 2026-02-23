@@ -1,32 +1,40 @@
 package com.alessiodp.oreannouncer.bukkit.blocks;
 
+import com.alessiodp.core.common.user.User;
 import com.alessiodp.core.common.utils.ADPLocation;
 import com.alessiodp.core.common.utils.CommonUtils;
 import com.alessiodp.oreannouncer.bukkit.addons.external.DiscordSRVHandler;
 import com.alessiodp.oreannouncer.bukkit.addons.external.ItemModsHandler;
 import com.alessiodp.oreannouncer.bukkit.addons.external.MMOItemsHandler;
 import com.alessiodp.oreannouncer.bukkit.addons.external.PlaceholderAPIHandler;
+import com.alessiodp.oreannouncer.bukkit.utils.FoliaUtil;
 import com.alessiodp.oreannouncer.common.OreAnnouncerPlugin;
 import com.alessiodp.oreannouncer.common.blocks.BlockManager;
 import com.alessiodp.oreannouncer.common.blocks.objects.BlockData;
 import com.alessiodp.oreannouncer.common.blocks.objects.OABlockImpl;
+import com.alessiodp.oreannouncer.common.configuration.data.ConfigMain;
+import com.alessiodp.oreannouncer.common.utils.OreAnnouncerPermission;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.world.WorldUnloadEvent;
+import org.bukkit.plugin.Plugin;
 
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.Set;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class BukkitBlockManager extends BlockManager {
+public class BukkitBlockManager extends BlockManager implements Listener {
 	/**
-	 * In-memory block mark storage using packed coordinates, keyed by world name.
-	 * Replaces Bukkit block metadata API for thread safety and Folia compatibility.
+	 * In-memory block mark storage using packed coordinates with bitmask values.
+	 * Keyed by world name -> packed coordinate -> bitmask of MarkType ordinals.
+	 * Replaces Bukkit metadata API for thread safety and Folia compatibility.
 	 */
-	private final ConcurrentHashMap<String, ConcurrentHashMap<Long, Set<MarkType>>> markedBlocks = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<String, ConcurrentHashMap<Long, Integer>> markedBlocks = new ConcurrentHashMap<>();
 
 	public BukkitBlockManager(OreAnnouncerPlugin plugin) {
 		super(plugin);
@@ -56,29 +64,16 @@ public class BukkitBlockManager extends BlockManager {
 
 	@Override
 	public boolean isBlockMarked(ADPLocation blockLocation, MarkType markType) {
-		ConcurrentHashMap<Long, Set<MarkType>> worldMap = markedBlocks.get(blockLocation.getWorld());
+		ConcurrentHashMap<Long, Integer> worldMap = markedBlocks.get(blockLocation.getWorld());
 		if (worldMap == null) {
 			return false;
 		}
-		Set<MarkType> marks = worldMap.get(packCoordinates(blockLocation));
-		return marks != null && marks.contains(markType);
+		Integer bits = worldMap.get(packCoordinates(blockLocation));
+		return bits != null && (bits & markBit(markType)) != 0;
 	}
 
-	@SuppressWarnings("ConstantConditions")
 	@Override
 	public boolean markBlock(ADPLocation blockLocation, OABlockImpl block, MarkType markType) {
-		long key = packCoordinates(blockLocation);
-		String world = blockLocation.getWorld();
-
-		// Check if already marked
-		ConcurrentHashMap<Long, Set<MarkType>> worldMap = markedBlocks.get(world);
-		if (worldMap != null) {
-			Set<MarkType> existing = worldMap.get(key);
-			if (existing != null && existing.contains(markType)) {
-				return false;
-			}
-		}
-
 		// Verify block type matches by querying the world
 		Block bukkitBlock = getBukkitBlock(blockLocation);
 		if (bukkitBlock == null) {
@@ -91,30 +86,76 @@ public class BukkitBlockManager extends BlockManager {
 			return false;
 		}
 
-		// Mark the block
+		// Single atomic mark operation — fixes TOCTOU race
+		int bit = markBit(markType);
+		long key = packCoordinates(blockLocation);
+		int[] prev = {0};
+
 		markedBlocks
-				.computeIfAbsent(world, w -> new ConcurrentHashMap<>())
-				.compute(key, (k, v) -> {
-					if (v == null) {
-						v = Collections.synchronizedSet(EnumSet.noneOf(MarkType.class));
-					}
-					v.add(markType);
-					return v;
+				.computeIfAbsent(blockLocation.getWorld(), w -> new ConcurrentHashMap<>())
+				.merge(key, bit, (existing, newBit) -> {
+					prev[0] = existing;
+					return existing | newBit;
 				});
-		return true;
+
+		return (prev[0] & bit) == 0;
 	}
 
 	@Override
 	public void unmarkBlock(ADPLocation blockLocation, MarkType markType) {
 		String world = blockLocation.getWorld();
-		ConcurrentHashMap<Long, Set<MarkType>> worldMap = markedBlocks.get(world);
+		ConcurrentHashMap<Long, Integer> worldMap = markedBlocks.get(world);
 		if (worldMap == null) {
 			return;
 		}
+		int bit = markBit(markType);
 		long key = packCoordinates(blockLocation);
 		worldMap.computeIfPresent(key, (k, v) -> {
-			v.remove(markType);
-			return v.isEmpty() ? null : v;
+			int result = v & ~bit;
+			return result == 0 ? null : result;
+		});
+	}
+
+	@Override
+	protected void executeBlockCommands(List<String> commands, BlockData data) {
+		if (!FoliaUtil.isFolia()) {
+			super.executeBlockCommands(commands, data);
+			return;
+		}
+
+		// Folia: schedule on the player's entity region thread
+		if (!ConfigMain.EXECUTE_COMMANDS_ENABLE || commands.isEmpty() || data.getPlayer() == null) {
+			return;
+		}
+
+		UUID playerUuid = data.getPlayer().getPlayerUUID();
+		Player player = Bukkit.getPlayer(playerUuid);
+		if (player == null) {
+			return;
+		}
+
+		Plugin bukkitPlugin = (Plugin) plugin.getBootstrap();
+		BlockData capturedData = data;
+
+		FoliaUtil.runOnEntity(bukkitPlugin, player, () -> {
+			User user = plugin.getPlayer(playerUuid);
+			if (user == null || user.hasPermission(OreAnnouncerPermission.ADMIN_BYPASS_EXECUTE_COMMANDS)) {
+				return;
+			}
+			for (String cmd : commands) {
+				if (ConfigMain.EXECUTE_COMMANDS_RUN_AS.equalsIgnoreCase("custom")) {
+					if (CommonUtils.toLowerCase(cmd).startsWith("console:"))
+						plugin.getBootstrap().executeCommand(parseMessage(cmd.substring(8), capturedData, AlerterType.CONSOLE));
+					else if (CommonUtils.toLowerCase(cmd).startsWith("player:"))
+						plugin.getBootstrap().executeCommandByUser(parseMessage(cmd.substring(7), capturedData, AlerterType.CONSOLE), user);
+					else
+						plugin.getBootstrap().executeCommandByUser(parseMessage(cmd, capturedData, AlerterType.CONSOLE), user);
+				} else if (ConfigMain.EXECUTE_COMMANDS_RUN_AS.equalsIgnoreCase("console")) {
+					plugin.getBootstrap().executeCommand(parseMessage(cmd, capturedData, AlerterType.CONSOLE));
+				} else {
+					plugin.getBootstrap().executeCommandByUser(parseMessage(cmd, capturedData, AlerterType.CONSOLE), user);
+				}
+			}
 		});
 	}
 
@@ -122,6 +163,19 @@ public class BukkitBlockManager extends BlockManager {
 	protected String parsePAPI(UUID playerUuid, String message) {
 		return PlaceholderAPIHandler.getPlaceholders(playerUuid, message);
 	}
+
+	// --- Cleanup ---
+
+	@EventHandler
+	public void onWorldUnload(WorldUnloadEvent event) {
+		markedBlocks.remove(event.getWorld().getName());
+	}
+
+	public void clearAll() {
+		markedBlocks.clear();
+	}
+
+	// --- Internals ---
 
 	private Block getBukkitBlock(ADPLocation loc) {
 		org.bukkit.World world = Bukkit.getWorld(loc.getWorld());
@@ -131,12 +185,16 @@ public class BukkitBlockManager extends BlockManager {
 		return new Location(world, loc.getX(), loc.getY(), loc.getZ()).getBlock();
 	}
 
+	private static int markBit(MarkType type) {
+		return 1 << type.ordinal();
+	}
+
 	/**
 	 * Packs block coordinates into a long for fast map lookups.
-	 * Layout: 26 bits X | 26 bits Z | 12 bits Y (matches Bukkit's Block key format).
+	 * Layout: 26 bits X | 26 bits Z | 12 bits Y.
 	 * Supports X/Z in [-33M, +33M] and Y in [-2048, +2047].
 	 */
-	private static long packCoordinates(ADPLocation loc) {
+	static long packCoordinates(ADPLocation loc) {
 		int x = (int) loc.getX();
 		int y = (int) loc.getY();
 		int z = (int) loc.getZ();

@@ -77,6 +77,7 @@ public class BukkitOreAnnouncerPlugin extends OreAnnouncerPlugin {
 		PluginManager pm = ((Plugin) getBootstrap()).getServer().getPluginManager();
 		pm.registerEvents(new BukkitBlockListener(this), ((Plugin) getBootstrap()));
 		pm.registerEvents(new BukkitJoinLeaveListener(this), ((Plugin) getBootstrap()));
+		pm.registerEvents((BukkitBlockManager) blockManager, ((Plugin) getBootstrap()));
 	}
 	
 	@Override

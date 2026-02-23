@@ -1,5 +1,12 @@
 package com.alessiodp.oreannouncer.bukkit.utils;
 
+import org.bukkit.entity.Entity;
+import org.bukkit.plugin.Plugin;
+
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.util.function.Consumer;
+
 /**
  * Utility class for detecting and interacting with Folia server runtime.
  */
@@ -21,5 +28,25 @@ public final class FoliaUtil {
 
 	public static boolean isFolia() {
 		return FOLIA;
+	}
+
+	/**
+	 * Schedules a task on the region thread that owns the given entity.
+	 * Required for Folia when executing commands as a player or
+	 * accessing player-specific state.
+	 */
+	public static void runOnEntity(Plugin plugin, Entity entity, Runnable task) {
+		try {
+			MethodHandle getScheduler = MethodHandles.publicLookup()
+					.unreflect(entity.getClass().getMethod("getScheduler"));
+			Object entityScheduler = getScheduler.invoke(entity);
+
+			MethodHandle run = MethodHandles.publicLookup()
+					.unreflect(entityScheduler.getClass().getMethod("run", Plugin.class, Consumer.class, Runnable.class));
+
+			run.invoke(entityScheduler, plugin, (Consumer<Object>) t -> task.run(), (Runnable) null);
+		} catch (Throwable e) {
+			throw new RuntimeException("Failed to schedule task on entity", e);
+		}
 	}
 }
