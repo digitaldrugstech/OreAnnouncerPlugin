@@ -313,22 +313,26 @@ public abstract class BlockManager {
 			plugin.getScheduler().getSyncExecutor().execute(() -> {
 				User user = plugin.getPlayer(data.getPlayer().getPlayerUUID());
 				if (!user.hasPermission(OreAnnouncerPermission.ADMIN_BYPASS_EXECUTE_COMMANDS)) {
-					for (String cmd : commands) {
-						if (ConfigMain.EXECUTE_COMMANDS_RUN_AS.equalsIgnoreCase("custom")) {
-							if (CommonUtils.toLowerCase(cmd).startsWith("console:"))
-								plugin.getBootstrap().executeCommand(parseMessage(cmd.substring(8), data, AlerterType.CONSOLE));
-							else if (CommonUtils.toLowerCase(cmd).startsWith("player:"))
-								plugin.getBootstrap().executeCommandByUser(parseMessage(cmd.substring(7), data, AlerterType.CONSOLE), user);
-							else
-								plugin.getBootstrap().executeCommandByUser(parseMessage(cmd, data, AlerterType.CONSOLE), user);
-						} else if (ConfigMain.EXECUTE_COMMANDS_RUN_AS.equalsIgnoreCase("console")) {
-							plugin.getBootstrap().executeCommand(parseMessage(cmd, data, AlerterType.CONSOLE));
-						} else {
-							plugin.getBootstrap().executeCommandByUser(parseMessage(cmd, data, AlerterType.CONSOLE), user);
-						}
-					}
+					dispatchCommands(commands, data, user);
 				}
 			});
+		}
+	}
+
+	protected void dispatchCommands(List<String> commands, BlockData data, User user) {
+		for (String cmd : commands) {
+			if (ConfigMain.EXECUTE_COMMANDS_RUN_AS.equalsIgnoreCase("custom")) {
+				if (CommonUtils.toLowerCase(cmd).startsWith("console:"))
+					plugin.getBootstrap().executeCommand(parseMessage(cmd.substring(8), data, AlerterType.CONSOLE));
+				else if (CommonUtils.toLowerCase(cmd).startsWith("player:"))
+					plugin.getBootstrap().executeCommandByUser(parseMessage(cmd.substring(7), data, AlerterType.CONSOLE), user);
+				else
+					plugin.getBootstrap().executeCommandByUser(parseMessage(cmd, data, AlerterType.CONSOLE), user);
+			} else if (ConfigMain.EXECUTE_COMMANDS_RUN_AS.equalsIgnoreCase("console")) {
+				plugin.getBootstrap().executeCommand(parseMessage(cmd, data, AlerterType.CONSOLE));
+			} else {
+				plugin.getBootstrap().executeCommandByUser(parseMessage(cmd, data, AlerterType.CONSOLE), user);
+			}
 		}
 	}
 	

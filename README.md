@@ -21,7 +21,7 @@ This is a fork maintained by [digitaldrugstech](https://github.com/digitaldrugst
 
 - **Folia support** — runtime detection with reflection-based scheduler, thread-safe block tracking via packed coordinates (replaces Bukkit metadata API)
 - **Java 17** — updated from Java 8
-- **Spigot API 1.21.4** — updated from 1.20.1
+- **Spigot API 1.21.4** — updated from 1.20.1 (minimum server version: 1.21.4)
 - **Bug fixes:**
   - Fixed `parseMessage()` placeholder chaining (light/height level placeholders were applied to wrong string)
   - Fixed `%maxpages%` placeholder missing closing `%` in `/oa top`

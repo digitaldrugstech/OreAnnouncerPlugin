@@ -135,27 +135,13 @@ public class BukkitBlockManager extends BlockManager implements Listener {
 		}
 
 		Plugin bukkitPlugin = (Plugin) plugin.getBootstrap();
-		BlockData capturedData = data;
 
 		FoliaUtil.runOnEntity(bukkitPlugin, player, () -> {
 			User user = plugin.getPlayer(playerUuid);
 			if (user == null || user.hasPermission(OreAnnouncerPermission.ADMIN_BYPASS_EXECUTE_COMMANDS)) {
 				return;
 			}
-			for (String cmd : commands) {
-				if (ConfigMain.EXECUTE_COMMANDS_RUN_AS.equalsIgnoreCase("custom")) {
-					if (CommonUtils.toLowerCase(cmd).startsWith("console:"))
-						plugin.getBootstrap().executeCommand(parseMessage(cmd.substring(8), capturedData, AlerterType.CONSOLE));
-					else if (CommonUtils.toLowerCase(cmd).startsWith("player:"))
-						plugin.getBootstrap().executeCommandByUser(parseMessage(cmd.substring(7), capturedData, AlerterType.CONSOLE), user);
-					else
-						plugin.getBootstrap().executeCommandByUser(parseMessage(cmd, capturedData, AlerterType.CONSOLE), user);
-				} else if (ConfigMain.EXECUTE_COMMANDS_RUN_AS.equalsIgnoreCase("console")) {
-					plugin.getBootstrap().executeCommand(parseMessage(cmd, capturedData, AlerterType.CONSOLE));
-				} else {
-					plugin.getBootstrap().executeCommandByUser(parseMessage(cmd, capturedData, AlerterType.CONSOLE), user);
-				}
-			}
+			dispatchCommands(commands, data, user);
 		});
 	}
 
@@ -195,9 +181,9 @@ public class BukkitBlockManager extends BlockManager implements Listener {
 	 * Supports X/Z in [-33M, +33M] and Y in [-2048, +2047].
 	 */
 	static long packCoordinates(ADPLocation loc) {
-		int x = (int) loc.getX();
-		int y = (int) loc.getY();
-		int z = (int) loc.getZ();
+		int x = (int) Math.floor(loc.getX());
+		int y = (int) Math.floor(loc.getY());
+		int z = (int) Math.floor(loc.getZ());
 		return ((long) (x & 0x3FFFFFF)) | (((long) (z & 0x3FFFFFF)) << 26) | (((long) (y & 0xFFF)) << 52);
 	}
 }
