@@ -10,18 +10,18 @@ import com.alessiodp.oreannouncer.common.utils.BlocksFoundResult;
 import lombok.Getter;
 import lombok.NonNull;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class PlayerManager {
 	protected final OreAnnouncerPlugin plugin;
-	
-	@Getter private final HashMap<UUID, OAPlayerImpl> cachePlayers;
-	
+
+	@Getter private final Map<UUID, OAPlayerImpl> cachePlayers;
+
 	public PlayerManager(@NonNull OreAnnouncerPlugin plugin) {
 		this.plugin = plugin;
-		cachePlayers = new HashMap<>();
+		cachePlayers = new ConcurrentHashMap<>();
 	}
 	
 	public void reload() {
