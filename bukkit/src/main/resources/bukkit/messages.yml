@@ -68,24 +68,22 @@ alerts:
   #   - Do not use obfuscation if you are using coordinates to run commands
   #   Example:
   #     {"text":"%x%","color":"gray"} - This is a single block for a coordinate
-  user: '&6%player% &efound %number% %display_color%%block%!'
-  # Without teleport:
-  # admin: "&6%player% &efound %number% %block%! &7[x: %x%&7, z: %z%&7]"
-  admin: '[{"text":"&6%player% &efound %number% %display_color%%block%&e! "},{"text":"&7Teleport","hoverEvent":{"action":"show_text","value":{"text":"&6Click to teleport!"}},"clickEvent":{"action":"run_command","value":"/tp %player%"}}]'
-  # No JSON for console
-  console: '%player% found %number% %block%! [x: %x%, y: %y%, z: %z%]'
+  user: '&7%player% &ffound %number% %display_color%%block%'
+  # Admin: "O | player found Nx block | x y z" with hover for light/height and click-to-TP
+  admin: '[{"text":"&cOA &8|"},{"text":"&6%player%","clickEvent":{"action":"suggest_command","value":"/tp %player%"},"hoverEvent":{"action":"show_text","value":{"text":"&7Teleport to &6%player%"}}},{"text":"&7 found "},{"text":"&f&l%number%"},{"text":"&8x "},{"text":"%display_color%%block%"},{"text":"&8 | "},{"text":"&3%x% %y% %z%","clickEvent":{"action":"run_command","value":"/tp %x% %y% %z%"},"hoverEvent":{"action":"show_text","value":{"text":"&7Light: &e%light_level% &8| &7Height: &e%height_level%\n&7World: &e%world%\n\n&aClick to teleport"}}}]'
+  console: 'OA | %player% found %number% %block% [%x% %y% %z%] light:%light_level% y:%height_level%'
 
   count:
     user: ''
-    admin: '[{"text":"&6%player% &efound %number% %display_color%%block%&e in %time%! "},{"text":"&7Teleport","hoverEvent":{"action":"show_text","value":{"text":"&6Click to teleport!"}},"clickEvent":{"action":"run_command","value":"/tp %player%"}}]'
-    # No JSON for console
-    console: '%player% found %number% %block% in %time%! [x: %x%, y: %y%, z: %z%]'
+    # Count alert — red prefix, red count number (many ores in short time = suspicious)
+    admin: '[{"text":"&cOA &8|"},{"text":"&6%player%","clickEvent":{"action":"suggest_command","value":"/tp %player%"},"hoverEvent":{"action":"show_text","value":{"text":"&7Teleport to &6%player%"}}},{"text":"&7 found "},{"text":"&c&l%number%"},{"text":"&8x "},{"text":"%display_color%%block%"},{"text":"&7 in "},{"text":"&e%time%"},{"text":"&8 | "},{"text":"&3%x% %y% %z%","clickEvent":{"action":"run_command","value":"/tp %x% %y% %z%"},"hoverEvent":{"action":"show_text","value":{"text":"&7Light: &e%light_level% &8| &7Height: &e%height_level%\n&7World: &e%world%\n\n&aClick to teleport"}}}]'
+    console: 'OA | %player% found %number% %block% in %time% [%x% %y% %z%] light:%light_level% y:%height_level%'
 
   tnt:
     user: ''
-    admin: '[{"text":"&eTNT of &6%player% &edestroyed %number% %display_color%%block%&e! "},{"text":"&7Teleport","hoverEvent":{"action":"show_text","value":{"text":"&6Click to teleport!"}},"clickEvent":{"action":"run_command","value":"/tp %x% %y% %z%"}}]'
-    console: 'TNT of %player% destroyed %number% %block%! [x: %x%, y: %y%, z: %z%]'
-    unknown-player: 'an unknown player'
+    admin: '[{"text":"&cOA &8|"},{"text":"&6%player%","clickEvent":{"action":"suggest_command","value":"/tp %player%"},"hoverEvent":{"action":"show_text","value":{"text":"&7Teleport to &6%player%"}}},{"text":"&7 TNT destroyed "},{"text":"&f&l%number%"},{"text":"&8x "},{"text":"%display_color%%block%"},{"text":"&8 | "},{"text":"&3%x% %y% %z%","clickEvent":{"action":"run_command","value":"/tp %x% %y% %z%"},"hoverEvent":{"action":"show_text","value":{"text":"&aClick to teleport"}}}]'
+    console: 'OA | %player% TNT destroyed %number% %block% [%x% %y% %z%]'
+    unknown-player: 'unknown'
 
   discordsrv:
     text:
