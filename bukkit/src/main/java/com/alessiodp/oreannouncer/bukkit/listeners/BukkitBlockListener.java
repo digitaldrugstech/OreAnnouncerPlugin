@@ -6,7 +6,7 @@ import com.alessiodp.oreannouncer.bukkit.blocks.BukkitBlockManager;
 import com.alessiodp.oreannouncer.common.OreAnnouncerPlugin;
 import com.alessiodp.oreannouncer.common.configuration.data.ConfigMain;
 import com.alessiodp.oreannouncer.common.listeners.BlockListener;
-import org.bukkit.Material;
+import org.bukkit.GameMode;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -19,7 +19,6 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 
 import java.util.ArrayList;
-import java.util.Set;
 
 public class BukkitBlockListener extends BlockListener implements Listener {
 	
@@ -27,23 +26,23 @@ public class BukkitBlockListener extends BlockListener implements Listener {
 		super(plugin);
 	}
 	
-	@SuppressWarnings({"deprecation", "ConstantConditions", "RedundantCast"})
 	@EventHandler(priority=EventPriority.MONITOR)
 	public void onBlockBreak(BlockBreakEvent event) {
-		if (!event.isCancelled()) {
-			// Get enchantments
-			int enchantmentLevel;
-			try {
-				enchantmentLevel = event.getPlayer().getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.SILK_TOUCH);
-			} catch (NoSuchMethodError ex) {
-				// MC 1.8
-				enchantmentLevel = event.getPlayer().getInventory().getItemInHand().getEnchantmentLevel(Enchantment.SILK_TOUCH);
+		if (!event.isCancelled() && event.getPlayer().getGameMode() != GameMode.CREATIVE) {
+			int enchantmentLevel = event.getPlayer().getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.SILK_TOUCH);
+
+			int lightLevel;
+			java.util.List<Block> targetBlocks = event.getPlayer().getLastTwoTargetBlocks(null, 10);
+			if (!targetBlocks.isEmpty()) {
+				lightLevel = targetBlocks.get(0).getLightLevel();
+			} else {
+				lightLevel = event.getBlock().getLightLevel();
 			}
-			
+
 			super.onBlockBreak(
 					new BukkitUser(plugin, event.getPlayer()),
 					((BukkitBlockManager) plugin.getBlockManager()).getBlockType(event.getBlock()),
-					event.getPlayer().getLastTwoTargetBlocks((Set<Material>) null,1).get(0).getLightLevel(),
+					lightLevel,
 					enchantmentLevel > 0,
 					new ADPLocation(
 							event.getBlock().getLocation().getWorld().getName(),
@@ -57,7 +56,6 @@ public class BukkitBlockListener extends BlockListener implements Listener {
 		}
 	}
 	
-	@SuppressWarnings("ConstantConditions")
 	@EventHandler(priority=EventPriority.MONITOR)
 	public void onBlockPlace(BlockPlaceEvent event) {
 		if (!event.isCancelled() && ConfigMain.BLOCKS_BYPASS_PLAYERBLOCKS)

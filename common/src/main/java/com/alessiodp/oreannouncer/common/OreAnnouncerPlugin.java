@@ -48,7 +48,9 @@ public abstract class OreAnnouncerPlugin extends ADPPlugin {
 	
 	@Override
 	public void onDisabling() {
-		// Nothing to disable
+		if (blockManager != null) {
+			blockManager.cleanup();
+		}
 	}
 	
 	@Override
@@ -83,6 +85,9 @@ public abstract class OreAnnouncerPlugin extends ADPPlugin {
 	@Override
 	public void reloadConfiguration() {
 		getLoggerManager().logDebug(Constants.DEBUG_PLUGIN_RELOADING, true);
+		if (blockManager != null) {
+			blockManager.cleanup();
+		}
 		getLoginAlertsManager().reload();
 		getConfigurationManager().reload();
 		reloadLoggerManager();

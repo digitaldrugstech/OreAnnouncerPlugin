@@ -116,7 +116,11 @@ public abstract class BlockManager {
 	public abstract boolean markBlock(ADPLocation blockLocation, OABlockImpl block, MarkType markType);
 	
 	public abstract void unmarkBlock(ADPLocation blockLocation, MarkType markType);
-	
+
+	public void cleanup() {
+		// Override in subclasses to free resources
+	}
+
 	public void handleAlerts(BlockData data) {
 		String userMessage = CommonUtils.getOr(data.getBlock().getMessageUser(), Messages.ALERTS_USER);
 		String adminMessage = CommonUtils.getOr(data.getBlock().getMessageAdmin(), Messages.ALERTS_ADMIN);
@@ -281,10 +285,10 @@ public abstract class BlockManager {
 					.replace("%number%", pNumber)
 					.replace("%block%", pBlock)
 					.replace("%world%", data.getLocation().getWorld())
-					.replace("%time%", elapsed >= 0 ? formatElapsed(elapsed) : "%time%"
+					.replace("%time%", elapsed >= 0 ? formatElapsed(elapsed) : "%time%")
 					.replace("%light_level%", Integer.toString(data.getLightLevel()))
 					.replace("%height_level%", Integer.toString((int) data.getLocation().getY()))
-				), data.getBlock());
+				, data.getBlock());
 		
 		String ret = plugin.getMessageUtils().convertPlayerPlaceholders(repl.apply(message), data.getPlayer());
 		
@@ -308,27 +312,31 @@ public abstract class BlockManager {
 		);
 	}
 	
-	private void executeBlockCommands(List<String> commands, BlockData data) {
+	protected void executeBlockCommands(List<String> commands, BlockData data) {
 		if (ConfigMain.EXECUTE_COMMANDS_ENABLE && !commands.isEmpty() && data.getPlayer() != null) {
 			plugin.getScheduler().getSyncExecutor().execute(() -> {
 				User user = plugin.getPlayer(data.getPlayer().getPlayerUUID());
-				if (!user.hasPermission(OreAnnouncerPermission.ADMIN_BYPASS_EXECUTE_COMMANDS)) {
-					for (String cmd : commands) {
-						if (ConfigMain.EXECUTE_COMMANDS_RUN_AS.equalsIgnoreCase("custom")) {
-							if (CommonUtils.toLowerCase(cmd).startsWith("console:"))
-								plugin.getBootstrap().executeCommand(parseMessage(cmd.substring(8), data, AlerterType.CONSOLE));
-							else if (CommonUtils.toLowerCase(cmd).startsWith("player:"))
-								plugin.getBootstrap().executeCommandByUser(parseMessage(cmd.substring(7), data, AlerterType.CONSOLE), user);
-							else
-								plugin.getBootstrap().executeCommandByUser(parseMessage(cmd, data, AlerterType.CONSOLE), user);
-						} else if (ConfigMain.EXECUTE_COMMANDS_RUN_AS.equalsIgnoreCase("console")) {
-							plugin.getBootstrap().executeCommand(parseMessage(cmd, data, AlerterType.CONSOLE));
-						} else {
-							plugin.getBootstrap().executeCommandByUser(parseMessage(cmd, data, AlerterType.CONSOLE), user);
-						}
-					}
+				if (user != null && !user.hasPermission(OreAnnouncerPermission.ADMIN_BYPASS_EXECUTE_COMMANDS)) {
+					dispatchCommands(commands, data, user);
 				}
 			});
+		}
+	}
+
+	protected void dispatchCommands(List<String> commands, BlockData data, User user) {
+		for (String cmd : commands) {
+			if (ConfigMain.EXECUTE_COMMANDS_RUN_AS.equalsIgnoreCase("custom")) {
+				if (CommonUtils.toLowerCase(cmd).startsWith("console:"))
+					plugin.getBootstrap().executeCommand(parseMessage(cmd.substring(8), data, AlerterType.CONSOLE));
+				else if (CommonUtils.toLowerCase(cmd).startsWith("player:"))
+					plugin.getBootstrap().executeCommandByUser(parseMessage(cmd.substring(7), data, AlerterType.CONSOLE), user);
+				else
+					plugin.getBootstrap().executeCommandByUser(parseMessage(cmd, data, AlerterType.CONSOLE), user);
+			} else if (ConfigMain.EXECUTE_COMMANDS_RUN_AS.equalsIgnoreCase("console")) {
+				plugin.getBootstrap().executeCommand(parseMessage(cmd, data, AlerterType.CONSOLE));
+			} else {
+				plugin.getBootstrap().executeCommandByUser(parseMessage(cmd, data, AlerterType.CONSOLE), user);
+			}
 		}
 	}
 	

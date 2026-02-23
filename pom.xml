@@ -60,25 +60,25 @@
 		
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<java.version>8</java.version>
-		<maven.compiler.source>1.8</maven.compiler.source>
-		<maven.compiler.target>1.8</maven.compiler.target>
+		<java.version>21</java.version>
+		<maven.compiler.source>21</maven.compiler.source>
+		<maven.compiler.target>21</maven.compiler.target>
 		
 		<maven.compiler.version>3.10.1</maven.compiler.version>
 		<maven.deploy.version>3.0.0</maven.deploy.version>
 		<maven.javadoc-plugin.version>3.4.1</maven.javadoc-plugin.version>
-		<maven.shade.version>3.4.1</maven.shade.version>
+		<maven.shade.version>3.6.0</maven.shade.version>
 		<maven.surefire.version>3.0.0-M7</maven.surefire.version>
 		<maven.versions.version>2.12.0</maven.versions.version>
 		
 		<!-- Dev libraries -->
 		<dev.annotations>23.1.0</dev.annotations>
-		<dev.lombok>1.18.24</dev.lombok>
-		<dev.mockito>4.11.0</dev.mockito>
+		<dev.lombok>1.18.34</dev.lombok>
+		<dev.mockito>5.14.2</dev.mockito>
 		<dev.junit>5.9.1</dev.junit>
 		
 		<libs.adpcore>1.8.10</libs.adpcore>
-		<libs.api.spigot>1.20.1-R0.1-SNAPSHOT</libs.api.spigot>
+		<libs.api.spigot>1.21.4-R0.1-SNAPSHOT</libs.api.spigot>
 		<libs.api.bungeecord>1.20-R0.1-SNAPSHOT</libs.api.bungeecord>
 		<!-- ADP Core Test Libraries -->
 		<libs.h2>1.4.200</libs.h2>
@@ -89,7 +89,7 @@
 		<libs.sqlite>3.40.0.0</libs.sqlite>
 		
 		<!-- External plugins -->
-		<libs.discordsrv>1.27.0-SNAPSHOT</libs.discordsrv>
+		<libs.discordsrv>1.27.0</libs.discordsrv>
 		<libs.itemMods>2.0.0-alpha.1</libs.itemMods>
 		<libs.llapi>1.7.4</libs.llapi>
 		<libs.mmoItems>6.9.4-SNAPSHOT</libs.mmoItems>
@@ -170,7 +170,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
-			<artifactId>mockito-inline</artifactId>
+			<artifactId>mockito-core</artifactId>
 			<version>${dev.mockito}</version>
 			<scope>test</scope>
 		</dependency>
