@@ -72,11 +72,29 @@ public class BukkitBlockManager extends BlockManager implements Listener {
 	}
 
 	@Override
+	public int countNearBlocks(ADPLocation blockLocation, OABlockImpl block, MarkType markType, int currentNumber) {
+		// Material check before marking — validates the block at this location
+		// matches the target ore type. Called from BlockBreakEvent on the owning
+		// region thread, so same-region world access is safe on both Paper and Folia.
+		org.bukkit.World world = Bukkit.getWorld(blockLocation.getWorld());
+		if (world == null) return currentNumber;
+		Block b = world.getBlockAt(
+				(int) Math.floor(blockLocation.getX()),
+				(int) Math.floor(blockLocation.getY()),
+				(int) Math.floor(blockLocation.getZ()));
+		String actualType = getBlockType(b);
+		if (!block.getMaterialName().equalsIgnoreCase(actualType)
+				&& !block.getVariants().contains(actualType)) {
+			return currentNumber;
+		}
+		return super.countNearBlocks(blockLocation, block, markType, currentNumber);
+	}
+
+	@Override
 	public boolean markBlock(ADPLocation blockLocation, OABlockImpl block, MarkType markType) {
-		// No world access here — block type is already verified at the call site.
-		// countNearBlocks() only recurses into matching blocks from the origin event thread.
-		// Querying the world would cause cross-region thread violations on Folia
-		// when an ore vein straddles a region boundary.
+		// No material check here — matching is enforced by countNearBlocks() before
+		// this method is called. World access is intentionally avoided to keep
+		// markBlock world-state-free and usable from any context.
 
 		// merge() is atomic per-key; prev[0] captures the pre-existing bits (0 if absent).
 		int bit = markBit(markType);
