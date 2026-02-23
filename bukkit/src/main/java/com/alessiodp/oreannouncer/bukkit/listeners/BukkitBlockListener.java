@@ -6,6 +6,7 @@ import com.alessiodp.oreannouncer.bukkit.blocks.BukkitBlockManager;
 import com.alessiodp.oreannouncer.common.OreAnnouncerPlugin;
 import com.alessiodp.oreannouncer.common.configuration.data.ConfigMain;
 import com.alessiodp.oreannouncer.common.listeners.BlockListener;
+import org.bukkit.GameMode;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -27,7 +28,7 @@ public class BukkitBlockListener extends BlockListener implements Listener {
 	
 	@EventHandler(priority=EventPriority.MONITOR)
 	public void onBlockBreak(BlockBreakEvent event) {
-		if (!event.isCancelled()) {
+		if (!event.isCancelled() && event.getPlayer().getGameMode() != GameMode.CREATIVE) {
 			int enchantmentLevel = event.getPlayer().getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.SILK_TOUCH);
 
 			int lightLevel;
