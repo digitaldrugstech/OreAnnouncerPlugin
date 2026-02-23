@@ -19,9 +19,9 @@ This is a fork maintained by [digitaldrugstech](https://github.com/digitaldrugst
 
 ### Changes from upstream
 
-- **Folia support** — runtime detection with reflection-based scheduler, thread-safe block tracking via packed coordinates (replaces Bukkit metadata API)
-- **Java 17** — updated from Java 8
-- **Spigot API 1.21.4** — updated from 1.20.1 (minimum server version: 1.21.4)
+- **Folia support** — Paper API scheduler, thread-safe block tracking via packed coordinates (replaces Bukkit metadata API)
+- **Java 21** — updated from Java 8
+- **Paper API 1.21.4** — updated from Spigot 1.20.1 (minimum server version: Paper 1.21.4)
 - **Bug fixes:**
   - Fixed `parseMessage()` placeholder chaining (light/height level placeholders were applied to wrong string)
   - Fixed `%maxpages%` placeholder missing closing `%` in `/oa top`
@@ -32,7 +32,7 @@ This is a fork maintained by [digitaldrugstech](https://github.com/digitaldrugst
 ### Building
 
 ```bash
-# Requires Java 17
+# Requires Java 21
 mvn clean package
 
 # Output JAR
