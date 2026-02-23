@@ -5,6 +5,8 @@ import com.alessiodp.core.bukkit.addons.internal.SpigotJsonHandler;
 import com.alessiodp.core.bukkit.scheduling.ADPBukkitScheduler;
 import com.alessiodp.core.common.bootstrap.ADPBootstrap;
 import com.alessiodp.core.common.configuration.Constants;
+import com.alessiodp.oreannouncer.bukkit.scheduling.ADPFoliaScheduler;
+import com.alessiodp.oreannouncer.bukkit.utils.FoliaUtil;
 import com.alessiodp.oreannouncer.bukkit.addons.BukkitOAAddonManager;
 import com.alessiodp.oreannouncer.bukkit.addons.external.BukkitMetricsHandler;
 import com.alessiodp.oreannouncer.bukkit.blocks.BukkitBlockManager;
@@ -34,11 +36,11 @@ public class BukkitOreAnnouncerPlugin extends OreAnnouncerPlugin {
 	
 	@Override
 	protected void initializeCore() {
-		scheduler = new ADPBukkitScheduler(this);
+		scheduler = FoliaUtil.isFolia() ? new ADPFoliaScheduler(this) : new ADPBukkitScheduler(this);
 		configurationManager = new BukkitOAConfigurationManager(this);
 		messageUtils = new BukkitMessageUtils(this);
 		messenger = new BukkitOAMessenger(this);
-		
+
 		super.initializeCore();
 	}
 	

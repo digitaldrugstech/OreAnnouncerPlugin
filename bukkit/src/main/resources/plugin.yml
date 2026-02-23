@@ -4,7 +4,8 @@ author: ${plugin.author}
 website: ${plugin.website}
 version: ${plugin.version}
 main: com.alessiodp.oreannouncer.bukkit.bootstrap.BukkitOreAnnouncerBootstrap
-api-version: 1.13
+api-version: 1.21
+folia-supported: true
 softdepend: [DiscordSRV, ItemMods, LastLoginAPI, MMOItems, PlaceholderAPI]
 permissions:
   oreannouncer.user.alerts.see:
